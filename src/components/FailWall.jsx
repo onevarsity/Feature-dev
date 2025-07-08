@@ -22,6 +22,7 @@ const FailWall = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [userReactions, setUserReactions] = useState({});
   const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
   const editorRef = useRef(null);
 
@@ -40,9 +41,7 @@ const FailWall = () => {
       };
       setPosts([post, ...posts]);
       setNewPost("");
-      if (editorRef.current) {
-        editorRef.current.innerHTML = "";
-      }
+      if (editorRef.current) editorRef.current.innerHTML = "";
       setMedia(null);
       setMediaType(null);
       setShowEmojiPicker(false);
@@ -65,25 +64,13 @@ const FailWall = () => {
     setPosts((prev) =>
       prev.map((post) => {
         if (post.id !== postId) return post;
-
-        const updatedReactions = { ...post.reactions };
-        // Remove previous reaction if exists
-        for (const key in updatedReactions) {
-          if (updatedReactions[key].byUser) {
-            delete updatedReactions[key];
+        const updatedReactions = {};
+        predefinedReactions.forEach((r) => {
+          if (r.emoji === emoji) {
+            updatedReactions[emoji] = { count: 1, byUser: true };
           }
-        }
-
-        // Set the new reaction
-        updatedReactions[emoji] = {
-          count: 1,
-          byUser: true,
-        };
-
-        return {
-          ...post,
-          reactions: updatedReactions,
-        };
+        });
+        return { ...post, reactions: updatedReactions };
       })
     );
     setUserReactions((prev) => ({ ...prev, [postId]: emoji }));
@@ -96,8 +83,16 @@ const FailWall = () => {
   };
 
   const handleDelete = (postId) => {
-    setPosts((prev) => prev.filter((post) => post.id !== postId));
+    setShowDeleteConfirm(postId);
   };
+
+  const confirmDelete = (postId) => {
+    setPosts((prev) => prev.filter((post) => post.id !== postId));
+    setShowDeleteConfirm(null);
+    toast.warn("🗑️ Post deleted");
+  };
+
+  const cancelDelete = () => setShowDeleteConfirm(null);
 
   const handleEmojiClick = (emojiData) => {
     if (editorRef.current) {
@@ -123,24 +118,15 @@ const FailWall = () => {
 
         <div className="mb-4 border rounded p-3 bg-white shadow">
           <div className="flex gap-2 mb-2">
-            <button
-              onClick={() => formatText("bold")}
-              className={`border px-3 py-1 font-bold rounded ${activeFormats.bold ? "bg-gray-300" : ""}`}
-            >
-              B
-            </button>
-            <button
-              onClick={() => formatText("italic")}
-              className={`border px-3 py-1 italic rounded ${activeFormats.italic ? "bg-gray-300" : ""}`}
-            >
-              I
-            </button>
-            <button
-              onClick={() => formatText("underline")}
-              className={`border px-3 py-1 underline rounded ${activeFormats.underline ? "bg-gray-300" : ""}`}
-            >
-              U
-            </button>
+            {['bold', 'italic', 'underline'].map((cmd) => (
+              <button
+                key={cmd}
+                onClick={() => formatText(cmd)}
+                className={`border px-3 py-1 rounded ${cmd === 'bold' ? 'font-bold' : cmd === 'italic' ? 'italic' : 'underline'} ${activeFormats[cmd] ? 'bg-gray-300' : ''}`}
+              >
+                {cmd.charAt(0).toUpperCase()}
+              </button>
+            ))}
           </div>
 
           <div
@@ -166,72 +152,101 @@ const FailWall = () => {
             <div className="flex gap-4 items-center">
               <label className="cursor-pointer">
                 <CameraIcon className="w-5 h-5 text-gray-600 hover:text-black" />
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  onChange={handleMediaChange}
-                  className="hidden"
-                />
+                <input type="file" accept="image/*,video/*" onChange={handleMediaChange} className="hidden" />
               </label>
               <SmileIcon
                 className="w-5 h-5 text-gray-600 hover:text-black cursor-pointer"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
               />
             </div>
-            <button
-              onClick={handlePost}
-              className="bg-red-500 text-white px-6 py-1.5 rounded-full font-semibold hover:bg-red-600"
-            >
+            <button onClick={handlePost} className="bg-red-500 text-white px-6 py-1.5 rounded-full font-semibold hover:bg-red-600">
               🚀 Post
             </button>
           </div>
 
           {showEmojiPicker && (
             <div className="z-50 bg-white border rounded shadow-md mt-2">
-              <EmojiPicker
-                onEmojiClick={handleEmojiClick}
-                skinTonesDisabled
-                height={300}
-                width={300}
-              />
+              <EmojiPicker onEmojiClick={handleEmojiClick} skinTonesDisabled height={300} width={300} />
             </div>
           )}
         </div>
 
         <div className="space-y-4">
-          {posts.map((post) => (
-            <motion.div
-              key={post.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="bg-white p-4 rounded shadow"
-            >
-              <PostCard
-                post={post}
-                onReact={handleReact}
-                onComment={handleComment}
-                onDelete={handleDelete}
-              />
-              <div className="mt-3 flex flex-wrap gap-2 text-sm">
-                {predefinedReactions.map((r) => {
-                  const userReactedEmoji = userReactions[post.id];
-                  return (
-                    <button
-                      key={r.emoji}
-                      onClick={() => handleReact(post.id, r.emoji)}
-                      className={`px-3 py-1 rounded-full border ${r.bg} ${r.text} font-medium shadow-sm hover:shadow-md transition-all duration-200 ${
-                        userReactedEmoji === r.emoji ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                      disabled={userReactedEmoji === r.emoji}
-                    >
-                      {r.emoji} {r.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          ))}
+          {posts.map((post) => {
+            const userEmoji = userReactions[post.id];
+            const reactionData = predefinedReactions.find((r) => r.emoji === userEmoji);
+            return (
+              <motion.div
+                key={post.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="bg-white p-4 rounded shadow"
+              >
+                <PostCard post={post} onReact={handleReact} onComment={handleComment} onDelete={() => handleDelete(post.id)} />
+
+                {showDeleteConfirm === post.id && (
+                  <div className="mt-3 p-4 bg-gradient-to-br from-red-50 to-red-100 border border-red-300 rounded-lg shadow-sm">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3">
+                        <span className="text-red-600 text-xl">🗑️</span>
+                        <div>
+                          <h4 className="text-red-700 font-semibold text-lg">Confirm Deletion</h4>
+                          <p className="text-sm text-red-600">Are you sure you want to permanently remove this post? This action cannot be undone.</p>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => confirmDelete(post.id)}
+                          className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded text-sm font-medium"
+                        >
+                          Yes, Delete
+                        </button>
+                        <button
+                          onClick={cancelDelete}
+                          className="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 px-4 py-1.5 rounded text-sm font-medium"
+                        >
+                          No, Keep It
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+               {reactionData && (
+  <div className="mt-3">
+    <button
+      className={`px-3 py-1 rounded-full border ${reactionData.bg} ${reactionData.text} font-medium shadow-sm flex items-center gap-1`}
+      disabled
+    >
+      <span>{reactionData.emoji}</span>
+      <span>1</span>
+      <span>{reactionData.label}</span>
+    </button>
+  </div>
+)}
+
+
+                <div className="mt-3 flex flex-wrap gap-2 text-sm">
+                  {predefinedReactions.map((r) => {
+                    const userReactedEmoji = userReactions[post.id];
+                    return (
+                      <button
+                        key={r.emoji}
+                        onClick={() => handleReact(post.id, r.emoji)}
+                        className={`px-3 py-1 rounded-full border ${r.bg} ${r.text} font-medium shadow-sm hover:shadow-md transition-all duration-200 ${
+                          userReactedEmoji === r.emoji ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        disabled={userReactedEmoji === r.emoji}
+                      >
+                        {r.emoji} {r.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </div>
