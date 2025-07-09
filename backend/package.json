@@ -1,0 +1,20 @@
+{
+  "name": "fail-wall",
+  "version": "1.0.0",
+  "description": "A simple social media API built with Node.js, Express.js, and MongoDB that supports posts, comments, reactions, and basic CRUD operations.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.1.0",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.2",
+    "nodemon": "^3.1.10"
+  }
+}
