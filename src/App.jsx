@@ -1,5 +1,4 @@
 // src/App.jsx
-import React from "react";
 import FailWall from "./components/FailWall";
 
 const App = () => {

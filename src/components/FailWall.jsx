@@ -1,11 +1,13 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef,useEffect } from "react";
 import PostCard from "./PostCard";
 import EmojiPicker from "emoji-picker-react";
 import { CameraIcon, SmileIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+import { getAllPosts, createPost, deletePost, addReaction, addComment } from "../api/api";
 
 const predefinedReactions = [
   { emoji: "👍", label: "Relatable", bg: "bg-yellow-100", text: "text-yellow-700" },
@@ -24,30 +26,61 @@ const FailWall = () => {
   const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
+  console.log("New:",newPost);
+
   const editorRef = useRef(null);
 
-  const handlePost = () => {
-    if (newPost.trim() || media) {
-      const post = {
-        id: Date.now(),
-        name: "You",
-        avatar: "https://i.pravatar.cc/150?u=you",
+  useEffect(() => {
+  const fetchPosts = async () => {
+    try {
+      const data = await getAllPosts();
+      console.log("data: ", data);
+      setPosts(data.posts);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    }
+  };
+
+  fetchPosts();
+}, []);
+
+  const handlePost = async () => {
+  if (newPost.trim()) {
+    console.log(newPost.trim());
+    try {
+      const postData = {
         content: newPost,
+        author: "You",
+      };
+
+      const data = await createPost(postData);
+      
+      
+      // const data = await res.json();
+      console.log({data});
+
+      if (!data.post) throw new Error(data.error || "Failed to create post");
+
+      const newPostObj = {
+        ...data.post,
         timestamp: "Just now",
-        reactions: {},
-        comments: [],
         media,
         mediaType,
       };
-      setPosts([post, ...posts]);
+
+      setPosts([newPostObj, ...posts]);
       setNewPost("");
       if (editorRef.current) editorRef.current.innerHTML = "";
       setMedia(null);
       setMediaType(null);
       setShowEmojiPicker(false);
       toast.success("🎉 Post submitted successfully!");
+    } catch (error) {
+      console.error("Failed to create post:", error);
+      toast.error("❌ Failed to submit post.");
     }
-  };
+  }
+};
 
   const handleMediaChange = (e) => {
     const file = e.target.files[0];
@@ -172,7 +205,7 @@ const FailWall = () => {
         </div>
 
         <div className="space-y-4">
-          {posts.map((post) => {
+          {posts?.map((post) => {
             const userEmoji = userReactions[post.id];
             const reactionData = predefinedReactions.find((r) => r.emoji === userEmoji);
             return (
@@ -213,7 +246,7 @@ const FailWall = () => {
                   </div>
                 )}
 
-               {reactionData && (
+              {reactionData && (
   <div className="mt-3">
     <button
       className={`px-3 py-1 rounded-full border ${reactionData.bg} ${reactionData.text} font-medium shadow-sm flex items-center gap-1`}
