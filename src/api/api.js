@@ -4,6 +4,11 @@ export const getAllPosts = async () => {
   const res = await fetch(`${BASE_URL}/posts`);
   return res.json();
 };
+//get post by id
+export const getPostById = async (id) => {
+    const res = await fetch(`${BASE_URL}/posts/${id}`);
+    return res.json();
+}
 
 export const createPost = async (postData) => {
     console.log(postData);

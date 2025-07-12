@@ -35,6 +35,7 @@ router.post('/', validatePost, async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const posts = await Post.find().sort({ createdAt: -1 });
+    // console.log("posts:",posts);
     res.json({
       message: 'Posts retrieved successfully',
       posts

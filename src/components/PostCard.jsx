@@ -4,7 +4,8 @@
 import React, { useState } from "react";
 import { Trash2 } from "lucide-react";
 
-const PostCard = ({ post, onReact, onComment, onDelete }) => {
+const PostCard = ({ post,predefinedReactions, onReact, onComment, onDelete }) => {
+  console.log(post);
   const [commentText, setCommentText] = useState("");
   const [replyTexts, setReplyTexts] = useState({});
 
@@ -92,6 +93,16 @@ const PostCard = ({ post, onReact, onComment, onDelete }) => {
     onComment(post.id, updatedComments);
   };
 
+  const renderEmoji = (reaction) => {
+    
+    const match = predefinedReactions.find((r)=>r.label === reaction.type);
+    console.log(match);
+    return match ? match.emoji : null;
+    
+
+  }
+
+  
   return (
     <div className="bg-white p-4 rounded shadow space-y-2">
       <div className="flex items-start space-x-3">
@@ -129,15 +140,17 @@ const PostCard = ({ post, onReact, onComment, onDelete }) => {
       </div>
 
       <div className="flex flex-wrap gap-2 text-sm mt-2">
+        {console.log("post133:",post)}
         {post.reactions &&
-          Object.entries(post.reactions).map(([emoji, data]) => (
-            <span key={emoji} className="bg-gray-100 px-2 py-1 rounded">
-              {emoji} {data.count}
+          post.reactions.map((reaction,index) => (
+            <span key={index} className="bg-gray-100 px-2 py-1 rounded">
+              {renderEmoji(reaction) + " "}
+              {reaction.type} {reaction.count}
             </span>
           ))}
       </div>
 
-      <div className="mt-3 flex space-x-2">
+      {/* <div className="mt-3 flex space-x-2">
         <input
           type="text"
           value={commentText}
@@ -151,7 +164,7 @@ const PostCard = ({ post, onReact, onComment, onDelete }) => {
         >
           Comment
         </button>
-      </div>
+      </div> */}
 
       <div className="mt-2 space-y-2">
         {(post.comments || []).map((comment) => (

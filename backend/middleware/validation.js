@@ -31,7 +31,7 @@ const validateReaction = (req, res, next) => {
     });
   }
   
-  const validTypes = ['like', 'love', 'laugh', 'angry', 'sad'];
+  const validTypes = ['relatable', 'inspired', 'funny', 'support'];
   if (!validTypes.includes(type)) {
     return res.status(400).json({ 
       error: 'Invalid reaction type. Valid types: ' + validTypes.join(', ') 

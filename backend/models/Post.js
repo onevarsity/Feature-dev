@@ -14,7 +14,7 @@ const postSchema = new mongoose.Schema({
   reactions: [{
     type: {
       type: String,
-      enum: ['like', 'love', 'laugh', 'angry', 'sad'],
+      enum: ['relatable', 'inspired', 'funny', 'support'],
       required: true
     },
     user: {
@@ -22,6 +22,9 @@ const postSchema = new mongoose.Schema({
       required: true
     }
   }],
+
+
+
   comments: [{
     content: {
       type: String,
